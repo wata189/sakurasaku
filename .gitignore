@@ -1,2 +1,5 @@
 /.venv
 /data
+jobs/dump
+node_modules
+.env.*

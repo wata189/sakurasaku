@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "job": "npx env-cmd -f .env.jobs.dev python jobs/create_model.py"
+  },
+  "dependencies": {
+    "env-cmd": "^10.1.0"
+  }
+}
