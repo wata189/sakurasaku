@@ -1,5 +1,12 @@
+# 自動で生成される系のファイル
 /.venv
+node_modules
+__pycache__
+
 /data
 jobs/dump
-node_modules
+.http
+
+#環境変数ファイル
 .env.*
+

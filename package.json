@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "job": "npx env-cmd -f .env.jobs.dev python jobs/create_model.py"
+    "job": "npx env-cmd -f jobs/.env.jobs.dev python jobs/create_model.py",
+    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/forecast.py --target=main"
   },
   "dependencies": {
     "env-cmd": "^10.1.0"

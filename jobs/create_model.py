@@ -118,18 +118,6 @@ def minus_base_date(date_str:str):
   return (delta / BASE_TIMEDELTA)
 
 """
-基準日に日数を足した日付を取得する
-
-Args:
-    days (float): 日数
-
-Returns:
-    pd.Timestamp: 基準日に日数を足した日付
-"""
-def plus_base_date(days:float):
-  return (BASE_DATE_DATETIME + BASE_TIMEDELTA * days)
-
-"""
 データの前処理を行う
 
 Args:
