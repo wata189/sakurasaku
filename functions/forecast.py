@@ -1,23 +1,85 @@
 import os
 import pickle
 import pandas as pd
+import geopandas as gpd
+import geopandas.tools as gpt
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
 
 def main(request):
   query_parameter = request.args.to_dict()
 
-  lat_param = query_parameter.get("lat")
-  lon_param = query_parameter.get("lon")
 
-  ###########TODO:パラメータチェック
-  # TODO: lat, lonが存在すること
-  # TODO: lat, lonがfloat型なこと
-  # TODO: lat, lonの範囲チェック　日本国内想定
+  #パラメータチェック
+  check_obj = check_query_parameter(query_parameter)
+  if not(check_obj["result"]):
+    # TODO: エラー返す処理
+    return check_obj
 
-  forecast = forecast_date(float(lat_param), float(lon_param))
+  lat_param = float(query_parameter.get("lat"))
+  lon_param = float(query_parameter.get("lon"))
+  forecast = forecast_date(lat_param, lon_param)
 
   return forecast
+
+def check_query_parameter(query_parameter:dict):
+  result = True
+  status_code = 200
+  err_msg = None
+
+  lat_param = query_parameter.get("lat")
+  lon_param = query_parameter.get("lon")
+  check_list = [
+    # lat, lonが存在すること
+    {"function": is_exist, "param": lat_param, "status_code": 400, "err_msg": "緯度が指定されていません"},
+    {"function": is_exist, "param": lon_param, "status_code": 400, "err_msg": "経度が指定されていません"},
+    # lat, lonがfloat型に変換できること
+    {"function": is_float, "param": lat_param, "status_code": 400, "err_msg": "緯度は数値を指定してください"},
+    {"function": is_float, "param": lon_param, "status_code": 400, "err_msg": "経度は数値を指定してください"},
+    # lat, lonが日本国内であること
+    {"function": is_japan, "param": {"lat": lat_param, "lon": lon_param}, "status_code": 400, "err_msg": "その地点は日本ではありません"}
+  ]
+
+  for check in check_list:
+    if not(check["function"](check["param"])):
+      result = False
+      status_code = check["status_code"]
+      err_msg = check["err_msg"]
+      break
+
+  return {
+    "result": result,
+    "status_code": status_code,
+    "err_msg": err_msg
+  }
+
+def is_exist(param:any):
+  return param is not None
+
+def is_float(param:str):
+  try:
+      float(param)  # 文字列を実際にfloat関数で変換してみる
+  except ValueError:
+      return False
+  else:
+      return True
+  
+def is_japan(param:dict):
+  lat = float(param.get("lat"))
+  lon = float(param.get("lon"))
+
+  df = pd.DataFrame([{"lat_center": lat, "lon_center": lon}])
+  gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df.lon_center, df.lat_center))
+  reverse_geocodes = gpt.reverse_geocode(gdf["geometry"], provider='nominatim', user_agent='test')
+  address = reverse_geocodes["address"][0]
+  print(address)
+
+  if address is None:
+    return False
+
+  country = address.split(",")[-1] # geopandasからの返却値addressは最後尾に国名が入っている
+  return str.strip(country) == "日本"
+
 
 PATH_DUMP_KAIKA  = os.environ.get("PATH_DUMP_KAIKA")
 PATH_DUMP_MANKAI = os.environ.get("PATH_DUMP_MANKAI")
