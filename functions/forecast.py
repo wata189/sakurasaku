@@ -13,8 +13,8 @@ def main(request):
   #パラメータチェック
   check_obj = check_query_parameter(query_parameter)
   if not(check_obj["result"]):
-    # TODO: エラー返す処理
-    return check_obj
+    # エラー返す処理
+    return check_obj, check_obj["status_code"]
 
   lat_param = float(query_parameter.get("lat"))
   lon_param = float(query_parameter.get("lon"))
@@ -104,10 +104,10 @@ def forecast_date(lat_param:float, lon_param:float):
 
 def open_model():
   with open(PATH_DUMP_KAIKA, mode='rb') as f:
-      kaika_model = pickle.load(f)
+      kaika_model:LinearRegression = pickle.load(f)
 
   with open(PATH_DUMP_MANKAI, mode='rb') as f:
-      mankai_model = pickle.load(f)
+      mankai_model:LinearRegression = pickle.load(f)
 
   return [kaika_model, mankai_model]
 
