@@ -1,9 +1,28 @@
 {
+  "name": "sakurasaku",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "job": "npx env-cmd -f jobs/.env.jobs.dev python jobs/create_model.py",
-    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/forecast.py --target=main"
+    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/forecast.py --target=main",
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "env-cmd": "^10.1.0"
+    "@quasar/extras": "^1.16.9",
+    "env-cmd": "^10.1.0",
+    "quasar": "^2.15.1",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "^1.6.0",
+    "@types/node": "^20.11.29",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "sass": "^1.33.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vue-tsc": "^1.8.27"
   }
 }
