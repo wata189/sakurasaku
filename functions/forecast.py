@@ -6,6 +6,11 @@ import geopandas.tools as gpt
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
 
+CLIENT_URL  = os.environ.get("CLIENT_URL")
+headers = {
+  "Access-Control-Allow-Origin": CLIENT_URL
+}
+
 def main(request):
   query_parameter = request.args.to_dict()
 
@@ -14,13 +19,13 @@ def main(request):
   check_obj = check_query_parameter(query_parameter)
   if not(check_obj["result"]):
     # エラー返す処理
-    return check_obj, check_obj["status_code"]
+    return (check_obj, check_obj["status_code"], headers)
 
   lat_param = float(query_parameter.get("lat"))
   lon_param = float(query_parameter.get("lon"))
   forecast = forecast_date(lat_param, lon_param)
 
-  return forecast
+  return (forecast, 200, headers)
 
 def check_query_parameter(query_parameter:dict):
   result = True
@@ -100,7 +105,10 @@ def forecast_date(lat_param:float, lon_param:float):
   kaika_date  = plus_base_date(kaika_days[0])
   mankai_date = plus_base_date(mankai_days[0])
 
-  return {"kaika_date": kaika_date, "mankai_date": mankai_date}
+  return {
+    "kaika_date": kaika_date.strftime("%Y-%m-%d"),
+    "mankai_date": mankai_date.strftime("%Y-%m-%d")
+  }
 
 def open_model():
   with open(PATH_DUMP_KAIKA, mode='rb') as f:
@@ -120,5 +128,5 @@ Args:
 Returns:
     pd.Timestamp: 基準日に日数を足した日付
 """
-def plus_base_date(days:float):
+def plus_base_date(days:float) -> pd.Timestamp:
   return (BASE_DATE_DATETIME + BASE_TIMEDELTA * days)
