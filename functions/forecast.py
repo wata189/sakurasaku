@@ -36,11 +36,15 @@ def check_query_parameter(query_parameter:dict):
   lon_param = query_parameter.get("lon")
   check_list = [
     # lat, lonが存在すること
-    {"function": is_exist, "param": lat_param, "status_code": 400, "err_msg": "緯度が指定されていません"},
-    {"function": is_exist, "param": lon_param, "status_code": 400, "err_msg": "経度が指定されていません"},
+    {"function": is_exist, "param": lat_param, "status_code": 400, "err_msg": "緯度が入力されていません"},
+    {"function": is_exist, "param": lon_param, "status_code": 400, "err_msg": "経度が入力されていません"},
     # lat, lonがfloat型に変換できること
-    {"function": is_float, "param": lat_param, "status_code": 400, "err_msg": "緯度は数値を指定してください"},
-    {"function": is_float, "param": lon_param, "status_code": 400, "err_msg": "経度は数値を指定してください"},
+    {"function": is_float, "param": lat_param, "status_code": 400, "err_msg": "緯度は数値を入力してください"},
+    {"function": is_float, "param": lon_param, "status_code": 400, "err_msg": "経度は数値を入力してください"},
+    # lat, lonが範囲内であること
+    {"function": is_latitude, "param": lat_param, "status_code": 400, "err_msg": "緯度は90以下を入力してください"},
+    {"function": is_longitude, "param": lon_param, "status_code": 400, "err_msg": "経度は180以下を入力してください"},
+
     # lat, lonが日本国内であること
     {"function": is_japan, "param": {"lat": lat_param, "lon": lon_param}, "status_code": 400, "err_msg": "その地点は日本ではありません"}
   ]
@@ -68,6 +72,12 @@ def is_float(param:str):
       return False
   else:
       return True
+
+def is_latitude(param:str):
+  return -90 <= float(param) <= 90
+
+def is_longitude(param:str):
+  return -180 <= float(param) <= 180
   
 def is_japan(param:dict):
   lat = float(param.get("lat"))
