@@ -6,7 +6,11 @@
   "scripts": {
     "job": "npx env-cmd -f jobs/.env.jobs.dev python jobs/create_model.py",
     "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/forecast.py --target=main",
-    "dev": "vite",
+    "devCloudStorage": "firebase emulators:start --import=emulator_data --export-on-exit",
+    "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
+    "--------------------------------------------------------------------------": "",
+    "devClient": "vite",
+    "---------------------------------------------------------------------------": "",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
