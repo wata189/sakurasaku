@@ -5,11 +5,28 @@ import geopandas as gpd
 import geopandas.tools as gpt
 from datetime import timedelta
 from sklearn.linear_model import LinearRegression
+from google.cloud import storage
 
+ENV = os.environ.get("ENV")
 CLIENT_URL  = os.environ.get("CLIENT_URL")
 headers = {
   "Access-Control-Allow-Origin": CLIENT_URL
 }
+
+FILE_NAME_KAIKA  = os.environ.get("FILE_NAME_KAIKA")
+FILE_NAME_MANKAI = os.environ.get("FILE_NAME_MANKAI")
+
+PATH_LOCAL_BUCKET = os.environ.get("PATH_LOCAL_BUCKET")
+
+GCP_CLOUD_STORAGE_BUCKET = os.environ.get("GCP_CLOUD_STORAGE_BUCKET")
+# 開発環境ではない場合はGCPに接続
+if(ENV != "development"):
+  client = storage.Client()
+  bucket = client.bucket(GCP_CLOUD_STORAGE_BUCKET)
+
+BASE_DATE = os.environ.get("BASE_DATE")
+BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
+BASE_TIMEDELTA = timedelta(days=1)
 
 def main(request):
   query_parameter = request.args.to_dict()
@@ -96,12 +113,6 @@ def is_japan(param:dict):
   return str.strip(country) == "日本"
 
 
-PATH_DUMP_KAIKA  = os.environ.get("PATH_DUMP_KAIKA")
-PATH_DUMP_MANKAI = os.environ.get("PATH_DUMP_MANKAI")
-
-BASE_DATE = os.environ.get("BASE_DATE")
-BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
-BASE_TIMEDELTA = timedelta(days=1)
 
 def forecast_date(lat_param:float, lon_param:float):
   # モデルをダンプしたファイルから取り出し
@@ -121,13 +132,23 @@ def forecast_date(lat_param:float, lon_param:float):
   }
 
 def open_model():
-  with open(PATH_DUMP_KAIKA, mode='rb') as f:
-      kaika_model:LinearRegression = pickle.load(f)
-
-  with open(PATH_DUMP_MANKAI, mode='rb') as f:
-      mankai_model:LinearRegression = pickle.load(f)
-
+  kaika_model = open_model_file(FILE_NAME_KAIKA)
+  mankai_model = open_model_file(FILE_NAME_MANKAI)
   return [kaika_model, mankai_model]
+
+def open_model_file(file_name:str):
+  model = None
+  # 開発環境の場合はローカルファイルから取り出し
+  if(ENV == "development"):
+    with open(os.path.join(PATH_LOCAL_BUCKET, file_name), mode='rb') as f:
+      model:LinearRegression = pickle.load(f)
+  else:
+    # 本番などの場合はGCPに接続
+    blob = bucket.blob(file_name)
+    model = pickle.loads(blob.download_as_string())
+  
+  return model
+
 
 """
 基準日に日数を足した日付を取得する
