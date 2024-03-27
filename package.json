@@ -4,14 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "----------------↓ローカルpython---------------------------------------------------------": "",
     "job": "npx env-cmd -f jobs/.env.jobs.dev python jobs/create_model.py",
-    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/forecast.py --target=main",
-    "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
-    "--------------------------------------------------------------------------": "",
+    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/main.py --target=main",
+    "----------------↓ローカルクライアント---------------------------------------------------------": "",
     "devClient": "vite",
-    "---------------------------------------------------------------------------": "",
+    "----------------↓手動CloudFunctionsデプロイ-----------------------------------------------------------": "",
+    "deployCloudFunctions": "npm-run-all beforeDeployCloudFunctions deployFunctions",
+    "----------------↓手動クライアントデプロイ-----------------------------------------------------------": "",
+    "----------------↓モジュール-----------------------------------------------------------": "",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
+    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=128MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.9",
@@ -25,6 +30,7 @@
     "@quasar/vite-plugin": "^1.6.0",
     "@types/node": "^20.11.29",
     "@vitejs/plugin-vue": "^5.0.4",
+    "npm-run-all": "^4.1.5",
     "sass": "^1.33.0",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",

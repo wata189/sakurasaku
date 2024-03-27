@@ -38,3 +38,17 @@ dist-ssr
 
 emulator_data
 *credentialskey.json
+
+# functions以外のデータ
+.vscode
+eda
+jobs
+public
+src
+index.html
+package-lock.json
+package.json
+README.md
+tsconfig.json
+tsconfig.node.json
+vite.config.json
