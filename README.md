@@ -2,5 +2,6 @@
 npmスクリプト - deployCloudFunctionsを叩く
 
 # github pagesデプロイ
-1.mainブランチにプルリク→マージ
-2.環境変数をgithub pagesに手動で設定
+1,github→setting→environmentで環境変数修正
+2.workflowに環境変数設定
+3.mainブランチにプルリク→マージ
