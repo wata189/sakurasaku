@@ -1,8 +1,39 @@
 {
+  "name": "sakurasaku",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "job": "npx env-cmd -f .env.jobs.dev python jobs/create_model.py"
+    "----------------↓ローカルpython---------------------------------------------------------": "",
+    "job": "npx env-cmd -f jobs/.env.jobs.dev python jobs/create_model.py",
+    "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/main.py --target=main",
+    "----------------↓ローカルクライアント---------------------------------------------------------": "",
+    "devClient": "vite",
+    "----------------↓手動CloudFunctionsデプロイ-----------------------------------------------------------": "",
+    "deployCloudFunctions": "npm-run-all beforeDeployCloudFunctions deployFunctions",
+    "----------------↓モジュール-----------------------------------------------------------": "",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
+    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=256MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated"
   },
   "dependencies": {
-    "env-cmd": "^10.1.0"
+    "@quasar/extras": "^1.16.9",
+    "@types/axios": "^0.14.0",
+    "axios": "^1.6.8",
+    "env-cmd": "^10.1.0",
+    "quasar": "^2.15.1",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "^1.6.0",
+    "@types/node": "^20.11.29",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "gh-pages": "^6.1.1",
+    "npm-run-all": "^4.1.5",
+    "sass": "^1.33.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vue-tsc": "^1.8.27"
   }
 }
