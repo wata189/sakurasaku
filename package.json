@@ -11,14 +11,11 @@
     "devClient": "vite",
     "----------------↓手動CloudFunctionsデプロイ-----------------------------------------------------------": "",
     "deployCloudFunctions": "npm-run-all beforeDeployCloudFunctions deployFunctions",
-    "----------------↓手動github pagesクライアントデプロイ-----------------------------------------------------------": "",
-    "deployClient": "npm-run-all build deployGithubPages",
     "----------------↓モジュール-----------------------------------------------------------": "",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
-    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=256MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated",
-    "deployGithubPages": "gh-pages -d dist"
+    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=256MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.9",
