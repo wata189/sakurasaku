@@ -40,8 +40,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          ENV: ${{ env.ENV }}
-          VITE_FUNCTIONS_URL: ${{ env.VITE_FUNCTIONS_URL }}
+          ENV: ${{ vars.ENV }}
+          VITE_FUNCTIONS_URL: ${{ vars.VITE_FUNCTIONS_URL }}
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
