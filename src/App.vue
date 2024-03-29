@@ -4,6 +4,9 @@ import { ref} from 'vue';
 import { QForm, useQuasar } from "quasar";
 import axiosBase, { AxiosError } from "axios"
 
+import facviconWhite from "./assets/favicon.white.svg"
+const FAVICON_WHITE = facviconWhite;
+
 const quasar = useQuasar();
 
 const axios = axiosBase.create({
@@ -124,7 +127,7 @@ onMounted(async () => {
     <q-layout view="lHh lpr lFf" container style="height: 400px">
       <q-header elevated class="bg-pink">
         <q-toolbar>
-          <q-img src="/favicon.white.svg" alt="桜アイコン" class="cherry-icon q-mx-sm"></q-img>
+          <q-img :src="FAVICON_WHITE" alt="桜アイコン" class="cherry-icon q-mx-sm"></q-img>
           <span class="text-h6">サクラサク？｜桜の開花予測</span>
         </q-toolbar>
       </q-header>
