@@ -6,7 +6,7 @@ from datetime import timedelta
 import pickle
 import os
 
-
+# 環境変数読み込み
 PATH_FORE_CASTS = os.environ.get("PATH_FORE_CASTS")
 PATH_PLACES     = os.environ.get("PATH_PLACES")
 
@@ -23,6 +23,7 @@ TEST_SIZE = 0.2
 # ROUND = 1000
 # STOPPING_ROUND = 100
 
+# カラム名を定数に設定
 COL_PLACE_CODE = "place_code"
 COL_DATE       = "date"
 COL_KAIKA      = "kaika_date"
@@ -30,17 +31,17 @@ COL_MANKAI     = "mankai_date"
 COLS_DROP = [COL_PLACE_CODE, "meter", "tavg", "tmin", "tmax", "prcp", "prefecture_en", "prefecture_jp", "spot_name"]
 
 
-'''
-与えられたデータフレーム・目的変数から重回帰分析モデルを作成する
-
-Args:
-    df (pd.DataFrame): 教師データ.
-    objectiv_col (str): 目的変数.
-
-Returns:
-    LinearRegression: 作成した重回帰分析のモデル
-'''
 def create_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
+  """
+  与えられたデータフレーム・目的変数から重回帰分析モデルを作成する
+
+  Args:
+      df (pd.DataFrame): 教師データ.
+      objectiv_col (str): 目的変数.
+
+  Returns:
+      LinearRegression: 作成した重回帰分析のモデル
+  """
   train_x, train_y, val_x, val_y = split_data_frame(df, objectiv_col)
 
   print("train start!")
@@ -55,17 +56,18 @@ def create_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
 
   return model
 
-"""
-データをトレーニングデータと検証用データに分割する
 
-Args:
-    df (pd.DataFrame): 教師データ.
-    objectiv_col (str): 目的変数.
-
-Returns:
-    List[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]: トレーニング用説明変数、トレーニング用目的変数、検証用説明変数、検証用目的変数をまとめたリスト
-"""
 def split_data_frame(df:pd.DataFrame, objectiv_col:str):
+  """
+  データをトレーニングデータと検証用データに分割する
+
+  Args:
+      df (pd.DataFrame): 教師データ.
+      objectiv_col (str): 目的変数.
+
+  Returns:
+      List[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]: トレーニング用説明変数、トレーニング用目的変数、検証用説明変数、検証用目的変数をまとめたリスト
+  """
   df_train, df_val =train_test_split(df, test_size=TEST_SIZE)
   train_y = df_train[objectiv_col]
   train_x = df_train.drop(objectiv_col, axis=1)
@@ -74,59 +76,60 @@ def split_data_frame(df:pd.DataFrame, objectiv_col:str):
   val_x = df_val.drop(objectiv_col, axis=1)
   return [train_x, train_y, val_x, val_y]
 
-"""
-開花予測データを取得する
-
-Returns:
-    pd.DataFrame: 開花予測データ
-"""
 def get_forecasts_data():
+  """
+  開花予測データを取得する
+
+  Returns:
+      pd.DataFrame: 開花予測データ
+  """
   return pd.read_csv(PATH_FORE_CASTS)
 
-"""
-桜スポットの位置データを取得する
-
-Returns:
-    pd.DataFrame: 桜スポットの位置データ
-"""
 def get_places_data():
+  """
+  桜スポットの位置データを取得する
+
+  Returns:
+      pd.DataFrame: 桜スポットの位置データ
+  """
   return pd.read_csv(PATH_PLACES)
 
-"""
-予測に使用するデータを取得する
-
-Returns:
-    pd.DataFrame: 予測用データ
-"""
 def get_data():
+  """
+  予測に使用するデータを取得する
+
+  Returns:
+      pd.DataFrame: 予測用データ
+  """
   df_forecasts = get_forecasts_data()
   df_places = get_places_data()
   df = pd.merge(df_forecasts, df_places, on=COL_PLACE_CODE)
   return df
 
-"""
-日付と基準日の差を計算する
 
-Args:
-    date_str (str): 日付（YYYY-MM-DD形式）
-
-Returns:
-    float: 引数に与えた日付と基準日の差（単位：日）
-"""
 def minus_base_date(date_str:str):
+  """
+  日付と基準日の差を計算する
+
+  Args:
+      date_str (str): 日付（YYYY-MM-DD形式）
+
+  Returns:
+      float: 引数に与えた日付と基準日の差（単位：日）
+  """
   delta = pd.to_datetime(date_str) - BASE_DATE_DATETIME
   return (delta / BASE_TIMEDELTA)
 
-"""
-データの前処理を行う
-
-Args:
-    df (pd.DataFrame): 元データ
-
-Returns:
-    pd.DataFrame: 前処理を行ったデータ
-"""
 def preprocess_data(df: pd.DataFrame):
+  """
+  データの前処理を行う
+
+  Args:
+      df (pd.DataFrame): 元データ
+
+  Returns:
+      pd.DataFrame: 前処理を行ったデータ
+  """
   # 不要なcol削除
   ret_df = df.drop(columns=COLS_DROP)
   
@@ -143,24 +146,35 @@ def preprocess_data(df: pd.DataFrame):
   
   return ret_df
 
-#モデルのダンプ
 def dump_model(kaika_model:any, mankai_model:any):
+  """
+  作成したモデルをファイルとして保存する
+  モデルの種類は変わっていくため、引数はany型にしておく
+
+  Args:
+      kaika_model (any): 開花日の予測モデル
+      mankai_model (any): 満開日の予測モデル
+
+  Returns:
+      None
+
+  """
   with open(PATH_DUMP_KAIKA, mode='wb') as f:
       pickle.dump(kaika_model, f, protocol=2)
   
   with open(PATH_DUMP_MANKAI, mode='wb') as f:
       pickle.dump(mankai_model, f, protocol=2)
-
-def main():
-  df = preprocess_data(get_data())
-
-  # データから満開日のデータを削ったデータで、開花日を予測するモデルを作成
-  kaika_model  = create_linear_regression_model(df.drop(columns=COL_MANKAI), COL_KAIKA)
-  # 開花日を削ったデータで、満開日を予測するモデルを作成
-  mankai_model = create_linear_regression_model(df.drop(columns=COL_KAIKA), COL_MANKAI)
-
-  #モデルの保存
-  dump_model(kaika_model, mankai_model)
+  # TODO:本番モードではクラウドにアップロードする
 
 
-main()
+# メイン処理開始
+df = preprocess_data(get_data())
+
+# データから満開日のデータを削ったデータで、開花日を予測するモデルを作成
+kaika_model  = create_linear_regression_model(df.drop(columns=COL_MANKAI), COL_KAIKA)
+# 開花日を削ったデータで、満開日を予測するモデルを作成
+mankai_model = create_linear_regression_model(df.drop(columns=COL_KAIKA), COL_MANKAI)
+
+#モデルの保存
+dump_model(kaika_model, mankai_model)
+

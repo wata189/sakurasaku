@@ -34,43 +34,76 @@ axios.interceptors.response.use((response) => {
   )
 });
 
+// フォーム要素の参照
 const locationForm:Ref<QForm | undefined> = ref();
-
 type LocationFormValue = {
   lat: number | null,
   lon: number | null
 }
+// フォームの書く要素にバインドして入力値を受け取る
 const locationFormValue:Ref<LocationFormValue> = ref({
   lat: null,
   lon: null
 });
 
+// フォーム要素のラベル
 const labels = {
   lat: "緯度",
   lon: "経度"
 };
-// validation
+
+// フォーム要素のバリデーション処理
+// quasarのコンポーネントの仕様で、 「true/falseを返すチェック処理 || エラーメッセージ」 の形式にする
+/**
+ * 値が存在することをチェックする処理
+ * カリー化を利用し、エラーメッセージ内の変数名を自由に変更できるようにする
+ * @param {string} valName - チェックする値の名前
+ * @returns {function(val: string): true | string} - 値が存在することをチェックする関数
+ */
 const isExist = (valName:string) => {
   return (val:any) => {
     return !["", null, undefined].includes(val) || `${valName}を入力してください`;
   };
 };
+/**
+ * 値が数値であることをチェックする処理
+ * カリー化を利用し、エラーメッセージ内の変数名を自由に変更できるようにする
+ * @param {string} valName - チェックする値の名前
+ * @returns {function(val: string): true | string} - 値が数値であることをチェックする関数
+ */
 const isNumber = (valName:string) => {
   return (val:string) => {
     return Number.isFinite(Number(val)) || `${valName}は数値を入力してください`;
   };
 };
+/**
+ * 値が緯度であることをチェックする処理
+ * @param {string} val - チェックする数値（文字列型）
+ * @returns {true | string} - 値が-90~90であればtrueを、そうでなければエラーメッセージを返す
+ */
 const isLatitude = (val:string) => {
   return (-90 <= Number(val) && Number(val) <= 90) || "緯度は90以下を入力してください";
 };
+/**
+ * 値が経度であることをチェックする処理
+ * @param {string} val - チェックする数値（文字列型）
+ * @returns {true | string} - 値が-180~180であればtrueを、そうでなければエラーメッセージを返す
+ */
 const isLongitude = (val:string) => {
   return (-180 <= Number(val) && Number(val) <= 180) || "経度は180以下を入力してください";
 };
+
+// フォームに設定するバリデーションルール
 const validationRules = {
   lat: [isExist(labels.lat), isNumber(labels.lat), isLatitude],
   lon: [isExist(labels.lon), isNumber(labels.lon), isLongitude]
 };
 
+/**
+ * 位置情報を取得する処理
+ * Promiseで包んでasync/awaitなど利用できるようにする
+ * @returns {Promise<GeolocationPosition>} - 位置情報を持ったPromiseオブジェクト
+ */
 const getCurrentPosition = ():Promise<GeolocationPosition> => {
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
@@ -80,17 +113,28 @@ const getCurrentPosition = ():Promise<GeolocationPosition> => {
   })
 }
 
+// 予測結果
 const forecastData = ref({
   isShow: false,
   kaikaDate: "",
   mankaiDate: ""
 });
 
+/**
+ * 日付データを画面表示用に加工する
+ * @param {string} date - 日付（YYYY-MM-DD形式）
+ * @returns {string} 日付表示
+ */
 const formatDispDate = (date:string):string => {
   const splited = date.split("-");
   return `${splited[1]}/${splited[2]}`
 };
 
+/**
+ * 位置情報から開花日・満開日の予測を行う
+ * @async
+ * @returns {Promise<void>} - asyncなので空のPromiseを返却
+ */
 const forecast = async () => {
   if(!locationForm.value)return;
   locationForm.value.validate().then(async (success:boolean) => {
@@ -105,17 +149,16 @@ const forecast = async () => {
     forecastData.value.mankaiDate = response.data.mankai_date;
     forecastData.value.isShow = true;
   });
-
-
 };
 
+// ローディング状態を格納
 const isLoading = ref(false);
 
 onMounted(async () => {
   const position = await getCurrentPosition();
-  if(!position) return;
+  if(!position) return; // 位置情報取得できなかったら画面表示のみ
 
-  // 位置情報取得できた場合はセットしてAPI叩く
+  // 位置情報取得できた場合はセットして予測API叩く
   locationFormValue.value.lat = position.coords.latitude;
   locationFormValue.value.lon = position.coords.longitude;
   forecast();
@@ -135,7 +178,7 @@ onMounted(async () => {
         <q-page class="q-pa-md">
           <div class="row justify-center">
             <div class="col-12 col-sm-6 col-lg-4">
-
+              <!-- 位置情報の入力 -->
               <q-form ref="locationForm">
                 <div class="row">
                   <div class="col-6 q-pa-xs">
@@ -165,6 +208,8 @@ onMounted(async () => {
                 label="開花日を予測"
                 class="full-width"
               ></q-btn>
+
+              <!-- 結果表示 -->
               <div class="col-12" v-if="forecastData.isShow">
                 <div class="row q-py-md">
                   <div class="col-6 q-pa-xs text-center">
@@ -188,6 +233,8 @@ onMounted(async () => {
       </q-page-container>
 
     </q-layout>
+
+    <!-- q-ajax-bar+inner-loadingの組み合わせで、ajax時にローディングを表示 -->
     <q-ajax-bar
       position="bottom"
       color="transparent"
