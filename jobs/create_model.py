@@ -5,13 +5,24 @@ from sklearn.metrics import mean_absolute_error as mae
 from datetime import timedelta
 import pickle
 import os
+from google.cloud import storage
 
 # 環境変数読み込み
-PATH_FORE_CASTS = os.environ.get("PATH_FORE_CASTS")
-PATH_PLACES     = os.environ.get("PATH_PLACES")
+ENV = os.environ.get("ENV")
 
-PATH_DUMP_KAIKA  = os.environ.get("PATH_DUMP_KAIKA")
-PATH_DUMP_MANKAI = os.environ.get("PATH_DUMP_MANKAI")
+PATH_DATA_FORECASTS = os.environ.get("PATH_DATA_FORECASTS")
+PATH_DATA_PLACES    = os.environ.get("PATH_DATA_PLACES")
+
+FILE_NAME_KAIKA  = os.environ.get("FILE_NAME_KAIKA")
+FILE_NAME_MANKAI = os.environ.get("FILE_NAME_MANKAI")
+
+PATH_LOCAL_BUCKET = os.environ.get("PATH_LOCAL_BUCKET")
+
+GCP_CLOUD_STORAGE_BUCKET = os.environ.get("GCP_CLOUD_STORAGE_BUCKET")
+# 開発環境ではない場合はGCPに接続
+if ENV != "development":
+  client = storage.Client()
+  bucket = client.bucket(GCP_CLOUD_STORAGE_BUCKET)
 
 BASE_DATE = os.environ.get("BASE_DATE")
 BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
@@ -83,7 +94,7 @@ def get_forecasts_data():
   Returns:
       pd.DataFrame: 開花予測データ
   """
-  return pd.read_csv(PATH_FORE_CASTS)
+  return pd.read_csv(PATH_DATA_FORECASTS)
 
 def get_places_data():
   """
@@ -92,7 +103,7 @@ def get_places_data():
   Returns:
       pd.DataFrame: 桜スポットの位置データ
   """
-  return pd.read_csv(PATH_PLACES)
+  return pd.read_csv(PATH_DATA_PLACES)
 
 def get_data():
   """
@@ -159,12 +170,27 @@ def dump_model(kaika_model:any, mankai_model:any):
       None
 
   """
-  with open(PATH_DUMP_KAIKA, mode='wb') as f:
-      pickle.dump(kaika_model, f, protocol=2)
+  dump_file(kaika_model, FILE_NAME_KAIKA)
+  dump_file(mankai_model, FILE_NAME_MANKAI)
+
+def dump_file(file: any, file_name: str):
+  """
+  ファイルをローカルまたはCloud Storageにダンプする
+
+  Args:
+      file_name (str): ファイル名
   
-  with open(PATH_DUMP_MANKAI, mode='wb') as f:
-      pickle.dump(mankai_model, f, protocol=2)
-  # TODO:本番モードではクラウドにアップロードする
+  Returns:
+      None
+  """
+  if ENV == "development":
+    with open(os.path.join(PATH_LOCAL_BUCKET, file_name), mode='wb') as f:
+        pickle.dump(file, f, protocol=2)
+  else:
+    # 本番モードではCloud Storageにアップロードする
+    blob = storage.Blob(file_name, bucket)
+    file_byte = pickle.dumps(file)
+    blob.upload_from_string(file_byte, content_type='application/octet-stream')
 
 
 # メイン処理開始
