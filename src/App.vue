@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, Ref } from '@vue/runtime-core';
-import { ref} from 'vue';
+import { computed, ref} from 'vue';
 import { QForm, useQuasar } from "quasar";
 import axiosBase, { AxiosError } from "axios"
 
@@ -33,6 +33,36 @@ axios.interceptors.response.use((response) => {
     }
   )
 });
+
+
+// 市区町村マスタはJsonから読み込み
+import citiesJson from "./assets/cities.json";
+type City = {
+    id: number;
+    lat: number;
+    lon: number;
+    name: string;
+  }
+const cities:City[] = citiesJson.cities;
+
+// 入力された文字を使用して市区町村マスタをフィルタリング
+const city = ref("");
+const filteredCities = computed(() => {
+  return cities.filter(c => {
+    return c.name.includes(city.value);
+  });
+});
+
+/**
+ * 市区町村の緯度経度をフォームに入力する処理
+ * @param {City} city - 市区町村
+ */
+const setPosition = (city:City) => {
+  locationFormValue.value.lat = city.lat;
+  locationFormValue.value.lon = city.lon;
+  forecast();
+};
+
 
 // フォーム要素の参照
 const locationForm:Ref<QForm | undefined> = ref();
@@ -180,8 +210,8 @@ onMounted(async () => {
             <div class="col-12 col-sm-6 col-lg-4">
               <!-- 位置情報の入力 -->
               <q-form ref="locationForm">
-                <div class="row">
-                  <div class="col-6 q-pa-xs">
+                <div class="row items-center">
+                  <div class="col-5 q-pa-xs">
                     <q-input
                       v-model="locationFormValue.lat"
                       type="number"
@@ -190,7 +220,7 @@ onMounted(async () => {
                       clearable
                     ></q-input>
                   </div>
-                  <div class="col-6 q-pa-xs">
+                  <div class="col-5 q-pa-xs">
                     <q-input
                       v-model="locationFormValue.lon"
                       type="number"
@@ -198,6 +228,33 @@ onMounted(async () => {
                       :rules="validationRules.lon"
                       clearable
                     ></q-input>
+                  </div>
+                  <div class="col-2 q-pa-xs">
+                    <!-- 市区町村検索 -->
+                    <q-btn-dropdown
+                      class="full-width"
+                      color="pink"
+                      icon="search"
+                    >
+                      <div class="bg-pink-2">
+                        <q-input
+                          v-model="city"
+                          placeholder=位置情報を入力
+                          class="q-pa-xs"
+                          dense
+                        ></q-input>
+                        <q-separator></q-separator>
+                        <q-scroll-area style="height:300px;">
+                          <q-list>
+                            <q-item v-for="city in filteredCities" clickable v-close-popup @click="setPosition(city)">
+                              <q-item-section>
+                                <q-item-label>{{ city.name }}</q-item-label>
+                              </q-item-section>
+                            </q-item>
+                          </q-list>
+                        </q-scroll-area>
+                      </div>
+                    </q-btn-dropdown>
                   </div>
                 </div>
               </q-form>
