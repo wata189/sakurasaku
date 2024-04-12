@@ -7,25 +7,21 @@ from datetime import timedelta
 import pickle
 import os
 from google.cloud import storage
+from sklearn.preprocessing import PolynomialFeatures
 
-# 環境変数読み込み
-ENV = os.environ.get("ENV")
+# 定数設定
+ENV = "development"
 
-PATH_DATA_FORECASTS = os.environ.get("PATH_DATA_FORECASTS")
-PATH_DATA_PLACES    = os.environ.get("PATH_DATA_PLACES")
+PATH_DATA_FORECASTS = "../data/cherry_blossom_forecasts.csv"
+PATH_DATA_PLACES    = "../data/cherry_blossom_places.csv"
 
-FILE_NAME_KAIKA  = os.environ.get("FILE_NAME_KAIKA")
-FILE_NAME_MANKAI = os.environ.get("FILE_NAME_MANKAI")
+FILE_NAME_KAIKA  = "model_kaika.sav"
+FILE_NAME_MANKAI = "model_mankai.sav"
 
-PATH_LOCAL_BUCKET = os.environ.get("PATH_LOCAL_BUCKET")
+PATH_LOCAL_BUCKET = "functions/bucket"
 
-GCP_CLOUD_STORAGE_BUCKET = os.environ.get("GCP_CLOUD_STORAGE_BUCKET")
-# 開発環境ではない場合はGCPに接続
-if ENV != "development":
-  client = storage.Client()
-  bucket = client.bucket(GCP_CLOUD_STORAGE_BUCKET)
 
-BASE_DATE = os.environ.get("BASE_DATE")
+BASE_DATE = "2024-01-01"
 BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
 BASE_TIMEDELTA = timedelta(days=1)
 
@@ -43,6 +39,90 @@ COL_KAIKA      = "kaika_date"
 COL_MANKAI     = "mankai_date"
 COLS_DROP = [COL_CODE, "meter", "tavg", "tmin", "tmax", "prcp", "prefecture_en", "prefecture_jp", "spot_name"]
 
+def create_polynomial_linear_regression_model(df: pd.DataFrame, objectiv_col: str, degree: int):
+  """
+  与えられたデータフレーム・目的変数から多項式回帰分析モデルを作成する
+
+  Args:
+      df (pd.DataFrame): 教師データ.
+      objectiv_col (str): 目的変数.
+      degree (int): 多項式の次数.
+
+  Returns:
+      LinearRegression: 作成した多項式回帰分析のモデル
+  """
+  train_x, train_y, val_x, val_y = split_data_frame(df, objectiv_col)
+  quadratic = PolynomialFeatures(
+    degree=degree,                  # 多項式の次数
+    interaction_only=False,    # Trueの場合、ある特徴量を2乗以上した項が除かれる
+    include_bias=True,         # Trueの場合、バイアス項を含める
+    order='C'                  # 出力する配列の計算順序
+  )
+
+
+  print("train start!")
+  model = LinearRegression()
+  model.fit(quadratic.fit_transform(train_x), train_y)
+  print("train end!")
+
+  # maeでモデル評価
+  print("mae↓")
+  vals = model.predict(quadratic.fit_transform(val_x))
+  print(mae(vals, val_y))
+
+  return model
+
+def create_log_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
+  """
+  与えられたデータフレーム・目的変数から対数回帰分析モデルを作成する
+
+  Args:
+      df (pd.DataFrame): 教師データ.
+      objectiv_col (str): 目的変数.
+
+  Returns:
+      LinearRegression: 作成した対数回帰分析のモデル
+  """
+  train_x, train_y, val_x, val_y = split_data_frame(df, objectiv_col)
+
+
+  print("train start!")
+  model = LinearRegression()
+  model.fit(train_x.apply(np.log), train_y)
+  print("train end!")
+
+  # maeでモデル評価
+  print("mae↓")
+  vals = model.predict(val_x.apply(np.log))
+  print(mae(vals, val_y))
+
+  return model
+
+def create_sqrt_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
+  """
+  与えられたデータフレーム・目的変数からルートの回帰分析モデルを作成する
+
+  Args:
+      df (pd.DataFrame): 教師データ.
+      objectiv_col (str): 目的変数.
+
+  Returns:
+      LinearRegression: 作成したルートの回帰分析のモデル
+  """
+  train_x, train_y, val_x, val_y = split_data_frame(df, objectiv_col)
+
+
+  print("train start!")
+  model = LinearRegression()
+  model.fit(train_x.apply(np.sqrt), train_y)
+  print("train end!")
+
+  # maeでモデル評価
+  print("mae↓")
+  vals = model.predict(val_x.apply(np.sqrt))
+  print(mae(vals, val_y))
+
+  return model
 
 def create_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
   """
@@ -188,21 +268,5 @@ def dump_file(file: any, file_name: str):
   if ENV == "development":
     with open(os.path.join(PATH_LOCAL_BUCKET, file_name), mode='wb') as f:
         pickle.dump(file, f, protocol=2)
-  else:
-    # 本番モードではCloud Storageにアップロードする
-    blob = storage.Blob(file_name, bucket)
-    file_byte = pickle.dumps(file)
-    blob.upload_from_string(file_byte, content_type='application/octet-stream')
 
-
-# メイン処理開始
-df = preprocess_data(get_data())
-
-# データから満開日のデータを削ったデータで、開花日を予測するモデルを作成
-kaika_model  = create_linear_regression_model(df.drop(columns=COL_MANKAI), COL_KAIKA)
-# 開花日を削ったデータで、満開日を予測するモデルを作成
-mankai_model = create_linear_regression_model(df.drop(columns=COL_KAIKA), COL_MANKAI)
-
-#モデルの保存
-dump_model(kaika_model, mankai_model)
 
