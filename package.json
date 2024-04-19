@@ -9,13 +9,17 @@
     "devCloudFunctions": "npx env-cmd -f functions/.env.functions.dev functions-framework --source=functions/main.py --target=main",
     "----------------↓ローカルクライアント---------------------------------------------------------": "",
     "devClient": "vite",
-    "----------------↓手動CloudFunctionsデプロイ-----------------------------------------------------------": "",
+    "----------------↓手動サーバーサイドデプロイ-----------------------------------------------------------": "",
     "deployCloudFunctions": "npm-run-all beforeDeployCloudFunctions deployFunctions",
+    "updateModel": "npm-run-all downloadData unzip createModelOnCloudStorage",
     "----------------↓モジュール-----------------------------------------------------------": "",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "beforeDeployCloudFunctions": "pip freeze > functions/requirements.txt",
-    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=256MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated"
+    "deployFunctions": "gcloud functions deploy Forecast --entry-point=main --region=asia-northeast2 --runtime=python310 --memory=256MB --security-level=secure-always --source=./functions --env-vars-file=functions/.env.functions.prod.yaml --trigger-http --allow-unauthenticated",
+    "downloadData": "kaggle datasets download -d altabbt/japan-cherry-blossoms-forecasts-2024 -p ./",
+    "unzip": "python jobs/unzip_data.py",
+    "createModelOnCloudStorage": "npx env-cmd -f jobs/.env.jobs.prod python jobs/create_model.py"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.9",
