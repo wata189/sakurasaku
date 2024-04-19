@@ -3,6 +3,7 @@ import { onMounted, Ref } from '@vue/runtime-core';
 import { computed, ref} from 'vue';
 import { QForm, useQuasar } from "quasar";
 import axiosBase, { AxiosError } from "axios"
+import SakuraDispDate from '@/components/SakuraDispDate.vue';
 
 import facviconWhite from "./assets/favicon.white.svg"
 const FAVICON_WHITE = facviconWhite;
@@ -151,16 +152,6 @@ const forecastData = ref({
 });
 
 /**
- * 日付データを画面表示用に加工する
- * @param {string} date - 日付（YYYY-MM-DD形式）
- * @returns {string} 日付表示
- */
-const formatDispDate = (date:string):string => {
-  const splited = date.split("-");
-  return `${splited[1]}/${splited[2]}`
-};
-
-/**
  * 位置情報から開花日・満開日の予測を行う
  * @async
  * @returns {Promise<void>} - asyncなので空のPromiseを返却
@@ -197,11 +188,11 @@ onMounted(async () => {
 
 <template>
   <div>
-    <q-layout view="lHh lpr lFf" container style="height: 400px">
+    <q-layout view="lHh lpr lFf" container style="min-height: 600px">
       <q-header elevated class="bg-pink">
         <q-toolbar>
           <q-img :src="FAVICON_WHITE" alt="桜アイコン" class="cherry-icon q-mx-sm"></q-img>
-          <span class="text-h6">サクラサク？｜桜の開花予測</span>
+          <span class="text-h6">サクラサク？</span><span class="text-h6 gt-xs">｜桜の開花予測</span>
         </q-toolbar>
       </q-header>
       <q-page-container>
@@ -211,7 +202,7 @@ onMounted(async () => {
               <!-- 位置情報の入力 -->
               <q-form ref="locationForm">
                 <div class="row items-center">
-                  <div class="col-5 q-pa-xs">
+                  <div class="col-4 col-md-5 q-pa-xs">
                     <q-input
                       v-model="locationFormValue.lat"
                       type="number"
@@ -220,7 +211,7 @@ onMounted(async () => {
                       clearable
                     ></q-input>
                   </div>
-                  <div class="col-5 q-pa-xs">
+                  <div class="col-4 col-md-5 q-pa-xs">
                     <q-input
                       v-model="locationFormValue.lon"
                       type="number"
@@ -229,7 +220,7 @@ onMounted(async () => {
                       clearable
                     ></q-input>
                   </div>
-                  <div class="col-2 q-pa-xs">
+                  <div class="col-4 col-md-2 q-pa-xs">
                     <!-- 市区町村検索 -->
                     <q-btn-dropdown
                       class="full-width"
@@ -268,19 +259,20 @@ onMounted(async () => {
 
               <!-- 結果表示 -->
               <div class="col-12" v-if="forecastData.isShow">
-                <div class="row q-py-md">
-                  <div class="col-6 q-pa-xs text-center">
-                    <div class="text-h5">開花日</div>
-                    <div>
-                      <span class="text-h4">{{ formatDispDate(forecastData.kaikaDate) }}</span>ごろ
-                    </div>
-                    
+                <div class="row q-py-md" v-if="forecastData.isShow">
+                  <div class="col-6 q-pa-xs">
+                    <sakura-disp-date
+                      title="開花日"
+                      :date="forecastData.kaikaDate"
+                    >
+                    </sakura-disp-date>
                   </div>
-                  <div class="col-6 q-pa-xs text-center">
-                    <div class="text-h5">満開日</div>
-                    <div>
-                      <span class="text-h4">{{ formatDispDate(forecastData.mankaiDate) }}</span>ごろ
-                    </div>
+                  <div class="col-6 q-pa-xs">
+                    <sakura-disp-date
+                      title="満開日"
+                      :date="forecastData.mankaiDate"
+                    >
+                    </sakura-disp-date>
                   </div>
                 </div>
               </div>
