@@ -250,7 +250,7 @@ onMounted(async () => {
                 </div>
               </q-form>
               <q-btn
-                icon="eco"
+                icon="insights"
                 color="pink"
                 @click="forecast"
                 label="開花日を予測"
