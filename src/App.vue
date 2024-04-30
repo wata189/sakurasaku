@@ -249,13 +249,15 @@ onMounted(async () => {
                   </div>
                 </div>
               </q-form>
-              <q-btn
-                icon="insights"
-                color="pink"
-                @click="forecast"
-                label="開花日を予測"
-                class="full-width"
-              ></q-btn>
+              <div class="col-12 q-pa-xs q-pt-md">
+                <q-btn
+                  icon="insights"
+                  color="pink"
+                  @click="forecast"
+                  label="開花日を予測"
+                  class="full-width"
+                ></q-btn>
+              </div>
 
               <!-- 結果表示 -->
               <div class="col-12" v-if="forecastData.isShow">
