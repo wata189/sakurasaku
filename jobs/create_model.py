@@ -30,10 +30,6 @@ BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
 BASE_TIMEDELTA = timedelta(days=1)
 
 TEST_SIZE = 0.2
-# TODO: LightGBMなどやるときの変数
-#EVAL_METRICS = "mae"
-# ROUND = 1000
-# STOPPING_ROUND = 100
 
 # カラム名を定数に設定
 COL_CODE       = "code"
