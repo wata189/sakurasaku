@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error as mae
+from sklearn.metrics import r2_score
 from datetime import timedelta
 import pickle
 import os
@@ -30,6 +31,7 @@ BASE_DATE_DATETIME = pd.to_datetime(BASE_DATE)
 BASE_TIMEDELTA = timedelta(days=1)
 
 TEST_SIZE = 0.2
+SEED = 42
 
 # カラム名を定数に設定
 COL_CODE       = "code"
@@ -62,6 +64,8 @@ def create_linear_regression_model(df: pd.DataFrame, objectiv_col: str):
   print("mae↓")
   vals = model.predict(val_x)
   print(mae(vals, val_y))
+  print("R^2↓")
+  print(r2_score(vals, val_y))
 
   return model
 
@@ -77,7 +81,7 @@ def split_data_frame(df:pd.DataFrame, objectiv_col:str):
   Returns:
       List[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]: トレーニング用説明変数、トレーニング用目的変数、検証用説明変数、検証用目的変数をまとめたリスト
   """
-  df_train, df_val =train_test_split(df, test_size=TEST_SIZE)
+  df_train, df_val =train_test_split(df, test_size=TEST_SIZE, random_state=SEED)
   train_y = df_train[objectiv_col]
   train_x = df_train.drop(objectiv_col, axis=1)
 
